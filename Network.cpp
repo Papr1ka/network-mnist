@@ -55,13 +55,9 @@ double* Network::softmax(double* array, int n)
 void Network::printWeights()
 {
 	//Вывод весов к скрытому слою
-	for (int i = 0; i < INPUT_DIM; i++)
+	for (int i = 0; i < OUT_DIM; i++)
 	{
-		for (int j = 0; j < HIDDEN_DIM; j++)
-		{
-			cout << weights1[i * INPUT_DIM + j] << " ";
-		}
-		cout << endl;
+		cout << bias2[i] << " ";
 	}
 }
 
@@ -81,21 +77,23 @@ double* Network::predict(double* data)
 	//Предсказание, нормализованный массив пикселей 28*28, одномерный
 	double* out = new double[HIDDEN_DIM];
 	multiplyMatrix(1, HIDDEN_DIM, INPUT_DIM, data, this->weights1, out);
-	cout << "Умножение прошло успешно" << endl;
+	//cout << "Умножение прошло успешно" << endl;
 	sumMatrix(1, HIDDEN_DIM, out, this->bias1, out);
-	cout << "Сложение прошло успешно" << endl;
+	//cout << "Сложение прошло успешно" << endl;
 
 	double* fout = this->relu(out, HIDDEN_DIM);
-	cout << "Релу прошло успешно" << endl;
+	//cout << "Релу прошло успешно" << endl;
 
 	double* out2 = new double[OUT_DIM];
 	multiplyMatrix(1, OUT_DIM, HIDDEN_DIM, fout, this->weights2, out2);
-	cout << "Умножение2 прошло успешно" << endl;
-	sumMatrix(1, OUT_DIM, out, this->bias2, out2);
-	cout << "Сложение2 прошло успешно" << endl;
+	//cout << "Умножение2 прошло успешно" << endl;
+
+	sumMatrix(1, OUT_DIM, out2, this->bias2, out2);
+	//cout << "Сложение2 прошло успешно" << endl;
 
 	double* fout2 = this->softmax(out2, OUT_DIM);
-	cout << "Softmax прошло успешно" << endl;
+	//cout << "Softmax прошло успешно" << endl;
+
 	delete[] out;
 	delete[] fout;
 	delete[] out2;
@@ -140,9 +138,9 @@ void Network::loadDataset()
 
 void Network::training()
 {
-	for (int epoch = 0; epoch < 1; epoch++)
+	for (int epoch = 0; epoch < 5; epoch++)
 	{
-		for (int i = 0; i < 5000; i++)
+		for (int i = 0; i < 10000; i++)
 		{
 			double* trainX = this->dataset[i];
 			int trainY = this->dataAnswers[i];
@@ -154,11 +152,12 @@ void Network::training()
 
 			double* out2 = new double[OUT_DIM];
 			multiplyMatrix(1, OUT_DIM, HIDDEN_DIM, fout, this->weights2, out2);
-			sumMatrix(1, OUT_DIM, out, this->bias2, out2);
+			sumMatrix(1, OUT_DIM, out2, this->bias2, out2);
 
 			double* z = this->softmax(out2, OUT_DIM);
 
 			double E = this->sparse_cross_entropy(z, trainY);
+
 
 			double* y_full = this->to_full(trainY);
 
@@ -166,10 +165,12 @@ void Network::training()
 			diffMatrix(1, OUT_DIM, z, y_full, dE_dt2);
 
 			double* dE_dW2 = new double[HIDDEN_DIM * OUT_DIM];
-			multiplyMatrix(HIDDEN_DIM, OUT_DIM, 1, fout, dE_dt2, dE_dW2);
+			double* fout_transposed = transposeMatrix(1, HIDDEN_DIM, fout);
+			multiplyMatrix(HIDDEN_DIM, OUT_DIM, 1, fout_transposed, dE_dt2, dE_dW2);
 
 			double* dE_dh1 = new double[HIDDEN_DIM];
-			multiplyMatrix(1, HIDDEN_DIM, OUT_DIM, dE_dt2, this->weights2, dE_dh1);
+			double* weights2_transposed = transposeMatrix(HIDDEN_DIM, OUT_DIM, this->weights2);
+			multiplyMatrix(1, HIDDEN_DIM, OUT_DIM, dE_dt2, weights2_transposed, dE_dh1);
 
 			double* dE_dt1 = new double[HIDDEN_DIM];
 
@@ -179,8 +180,9 @@ void Network::training()
 			}
 
 			double* dE_dW1 = new double[INPUT_DIM * HIDDEN_DIM];
+			double* trainX_transposed = transposeMatrix(1, INPUT_DIM, trainX);
 
-			multiplyMatrix(INPUT_DIM, HIDDEN_DIM, 1, trainX, dE_dt1, dE_dW1);
+			multiplyMatrix(INPUT_DIM, HIDDEN_DIM, 1, trainX_transposed, dE_dt1, dE_dW1);
 
 			multiplyMatrixNumber(dE_dW1, INPUT_DIM * HIDDEN_DIM, ALPHA);
 			diffMatrix(INPUT_DIM, HIDDEN_DIM, this->weights1, dE_dW1, this->weights1);
@@ -193,17 +195,20 @@ void Network::training()
 
 			multiplyMatrixNumber(dE_dt2, OUT_DIM, ALPHA);
 			diffMatrix(OUT_DIM, 1, this->bias2, dE_dt2, this->bias2);
-			cout << E << endl;
+			//cout << E << endl;
 			delete[] out;
 			delete[] fout;
+			delete[] fout_transposed;
 			delete[] out2;
 			delete[] z;
 			delete[] y_full;
 			delete[] dE_dt2;
 			delete[] dE_dW2;
 			delete[] dE_dh1;
+			delete[] weights2_transposed;
 			delete[] dE_dt1;
 			delete[] dE_dW1;
+			delete[] trainX_transposed;
 		}
 	}
 }
@@ -222,7 +227,7 @@ void Network::calcAccuracy()
 			count += 1;
 		}
 	}
-	double accuracy = count / 1000;
+	double accuracy = double(count) / double(1000);
 	cout << "Точность: " << accuracy << endl;
 }
 
@@ -261,4 +266,79 @@ void Network::saveWeights(string path)
 
 	cout << "Weights saved \n";
 	fout.close();
+}
+
+void Network::loadWeights()
+{
+	ifstream file("w1");
+	if (file.is_open())
+	{
+		int count = INPUT_DIM * HIDDEN_DIM;
+		double* data = new double[count];
+
+		for (int i = 0; i < count; i++)
+		{
+			file >> data[i];
+		}
+		delete[] this->weights1;
+		this->weights1 = data;
+		cout << "Веса1 загружены" << endl;
+	}
+	file.close();
+
+	file.open("b1");
+	if (file.is_open())
+	{
+		int count = INPUT_DIM;
+		double* data2 = new double[count];
+
+		for (int i = 0; i < count; i++)
+		{
+			file >> data2[i];
+		}
+		delete[] this->bias1;
+		this->bias1 = data2;
+		cout << "Смещения1 загружены" << endl;
+	}
+	file.close();
+
+	file.open("w2");
+	if (file.is_open())
+	{
+		int count = HIDDEN_DIM * OUT_DIM;
+		double* data3 = new double[count];
+
+		for (int i = 0; i < count; i++)
+		{
+			file >> data3[i];
+		}
+		delete[] this->weights2;
+		this->weights2 = data3;
+		cout << "Веса2 загружены" << endl;
+	}
+	file.close();
+
+	file.open("b2");
+	if (file.is_open())
+	{
+		int count = OUT_DIM;
+		double* data4 = new double[count];
+
+		for (int i = 0; i < count; i++)
+		{
+			file >> data4[i];
+		}
+		delete[] this->bias2;
+		this->bias2 = data4;
+		cout << "Смещения2 загружены" << endl;
+	}
+	file.close();
+}
+
+void Network::showLayers()
+{
+	statsArray(INPUT_DIM * HIDDEN_DIM, this->weights1);
+	statsArray(HIDDEN_DIM, this->bias1);
+	statsArray(HIDDEN_DIM * OUT_DIM, this->weights2);
+	statsArray(OUT_DIM, this->bias2);
 }

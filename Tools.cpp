@@ -5,7 +5,7 @@ void randomWeights(double* array, int n)
     //Инициализирует матрицу рандомными значениями от 0 до 1
 	for (int i = 0; i < n; i++)
 	{
-        array[i] = (double)(rand()) / RAND_MAX;
+        array[i] = (double)(rand()) / RAND_MAX * 0.1;
 	}
 }
 
@@ -169,15 +169,39 @@ int argMax(double* value, int size)
     return prediction;
 }
 
-void transposeMatrix(int M, int N, double* Matrix)
+double* transposeMatrix(int M, int N, double* Matrix)
 {
+    //Matrix MxN
     double* result = new double[M * N];
 
-    for (int i = 0; i < M; i++)
+    for (int i = 0; i < N; i++)
     {
-        for (int j = 0; j < N; j++)
+        for (int j = 0; j < M; j++)
         {
             result[i * M + j] = Matrix[j * N + i];
         }
     }
+    return result;
+}
+
+void statsArray(int n, double* array)
+{
+    double min = array[0];
+    double max = array[0];
+    double avg = 0;
+
+    for (int i = 0; i < n; i++)
+    {
+        if (array[i] > max)
+        {
+            max = array[i];
+        }
+        if (array[i] < min)
+        {
+            min = array[i];
+        }
+        avg += array[i];
+    }
+    avg = avg / double(n);
+    cout << "Массив [" << n << "], Min: " << min << " Max: " << max << " Avg: " << avg << endl;
 }

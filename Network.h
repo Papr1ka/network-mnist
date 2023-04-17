@@ -60,4 +60,6 @@ public:
 	double* losses;
 	void calcAccuracy();
 	void saveWeights(string path);
+	void loadWeights();
+	void showLayers();
 };

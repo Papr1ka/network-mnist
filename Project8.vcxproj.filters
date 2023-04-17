@@ -43,5 +43,17 @@
     <None Include="..\..\Number Recognize\Number Recognize\mnist_train.csv">
       <Filter>Файлы ресурсов</Filter>
     </None>
+    <None Include="b1">
+      <Filter>Файлы ресурсов</Filter>
+    </None>
+    <None Include="b2">
+      <Filter>Файлы ресурсов</Filter>
+    </None>
+    <None Include="w1">
+      <Filter>Файлы ресурсов</Filter>
+    </None>
+    <None Include="w2">
+      <Filter>Файлы ресурсов</Filter>
+    </None>
   </ItemGroup>
 </Project>

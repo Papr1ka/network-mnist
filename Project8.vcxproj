@@ -139,6 +139,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\Number Recognize\Number Recognize\mnist_train.csv" />
+    <None Include="b1" />
+    <None Include="b2" />
+    <None Include="w1" />
+    <None Include="w2" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

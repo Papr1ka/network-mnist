@@ -30,4 +30,6 @@ int* readMNISTLabels(int NumberOfImages);
 
 int argMax(double* value, int size);
 
-void transposeMatrix(int M, int N, double* Matrix);
+double* transposeMatrix(int M, int N, double* Matrix);
+
+void statsArray(int n, double* array);
