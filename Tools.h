@@ -8,6 +8,12 @@
 
 using namespace std;
 
+enum DataSetType
+{
+	Train,
+	Test
+};
+
 void randomWeights(double* array, int n);
 
 double* initMatrix(int n, int m);
@@ -24,12 +30,14 @@ void diffMatrix(int M, int N, const double* A, const double* B, double* C);
 
 int ReverseInt(int i);
 
-double** readMNIST(int NumberOfImages, int DataOfAnImage);
+double** readMNIST(DataSetType type);
 
-int* readMNISTLabels(int NumberOfImages);
+int* readMNISTLabels(DataSetType type);
 
 int argMax(double* value, int size);
 
 double* transposeMatrix(int M, int N, double* Matrix);
 
 void statsArray(int n, double* array);
+
+double* readFile(string filename);

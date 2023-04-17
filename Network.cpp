@@ -111,36 +111,46 @@ double* Network::to_full(int value)
 	return result;
 }
 
-void Network::loadDataset()
+void Network::loadDataset(DataSetType type)
 {
 	//Загрузка датасета из 10000 картинок 28*28 пикселей
-	double** data = readMNIST(10000, 784);
+	switch (type)
+	{
+	case Train:
+		this->datasetSize = 60000;
+		break;
+	case Test:
+		this->datasetSize = 10000;
+		break;
+	}
+	double** data = readMNIST(type);
 	if (data != nullptr)
 	{
-		cout << "Данные прочтены" << endl;
 		this->dataset = data;
 	}
 	else
 	{
-		cout << "Жопа с данными" << endl;
+		cout << "Проблема с данными в датасете" << endl;
 	}
-	int* data2 = readMNISTLabels(10000);
+	int* data2 = readMNISTLabels(type);
 	if (data != nullptr)
 	{
-		cout << "Надписи прочтены" << endl;
 		this->dataAnswers = data2;
 	}
 	else
 	{
-		cout << "Жопа с надписями" << endl;
+		cout << "Проблема с данными надписей к датасету" << endl;
 	}
+	string name = type == DataSetType::Test ? "Тестовый" : "Тренировочный";
+	cout << "Загружен " << name << " Датасет" << endl;
 }
 
 void Network::training()
 {
-	for (int epoch = 0; epoch < 5; epoch++)
+	cout << "Тренировка начата" << endl;
+	for (int epoch = 0; epoch < EPOCH_COUNT; epoch++)
 	{
-		for (int i = 0; i < 10000; i++)
+		for (int i = 0; i < this->datasetSize; i++)
 		{
 			double* trainX = this->dataset[i];
 			int trainY = this->dataAnswers[i];
@@ -216,7 +226,7 @@ void Network::training()
 void Network::calcAccuracy()
 {
 	int count = 0;
-	for (int i = 0; i < 1000; i++)
+	for (int i = 0; i < this->datasetSize; i++)
 	{
 		double* test_data = this->dataset[i];
 		int correct = this->dataAnswers[i];
@@ -227,45 +237,42 @@ void Network::calcAccuracy()
 			count += 1;
 		}
 	}
-	double accuracy = double(count) / double(1000);
+	double accuracy = double(count) / double(datasetSize);
 	cout << "Точность: " << accuracy << endl;
 }
 
-void Network::saveWeights(string path)
+void Network::saveWeights()
 {
 	ofstream fout;
-	fout.open(path);
+	fout.open("w1");
 	if (!fout.is_open()) {
-		cout << "Error reading the file";
-		system("pause");
+		cout << "Ошибка, не удалось открыть файл для сохранения весов" << endl;
 	}
 
 	for (int i = 0; i < INPUT_DIM * HIDDEN_DIM; i++)
 	{
-		fout << this->weights1[i] << " ";
+		fout << this->weights1[i];
 	}
-	fout << endl;
-
+	fout.close();
+	fout.open("b1");
 	for (int i = 0; i < HIDDEN_DIM; i++)
 	{
-		fout << this->bias1[i] << " ";
+		fout << this->bias1[i];
 	}
-	fout << endl;
-
+	fout.close();
+	fout.open("w2");
 	for (int i = 0; i < HIDDEN_DIM * OUT_DIM; i++)
 	{
-		fout << this->weights2[i] << " ";
+		fout << this->weights2[i];
 	}
-	fout << endl;
-
+	fout.close();
+	fout.open("b2");
 	for (int i = 0; i < OUT_DIM; i++)
 	{
-		fout << this->bias2[i] << " ";
+		fout << this->bias2[i];
 	}
-	fout << endl;
-
-	cout << "Weights saved \n";
 	fout.close();
+	cout << "Weights saved \n";
 }
 
 void Network::loadWeights()

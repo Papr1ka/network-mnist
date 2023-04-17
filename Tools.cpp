@@ -1,5 +1,6 @@
 ﻿#include "Tools.h"
 
+
 void randomWeights(double* array, int n)
 {
     //Инициализирует матрицу рандомными значениями от 0 до 1
@@ -20,6 +21,7 @@ double* initMatrix(int n, int m)
 
 void multiplyMatrix(int M, int N, int K, const double* A, const double* B, double* C)
 {
+    //Произведение матриц A[MxK], B[KxN], запись в матрицу C[MxN]
     for (int i = 0; i < M; ++i)
     {
         double* c = C + i * N;
@@ -37,7 +39,7 @@ void multiplyMatrix(int M, int N, int K, const double* A, const double* B, doubl
 
 void multiplyMatrixNumber(double* Matrix, int size, double number)
 {
-    //Сумма матриц
+    //Произведение матрицы на число, запись производится в переданную матрицу
     for (int i = 0; i < size; i++)
     {
         Matrix[i] = number * Matrix[i];
@@ -55,7 +57,7 @@ void deleteMatrix(double* array)
 
 void sumMatrix(int M, int N, const double* A, const double* B, double* C)
 {
-    //Сумма матриц
+    //Сумма матриц, запись производится в матрицу C
     int right = M * N;
     for (int i = 0; i < right ; i++)
     {
@@ -65,7 +67,7 @@ void sumMatrix(int M, int N, const double* A, const double* B, double* C)
 
 void diffMatrix(int M, int N, const double* A, const double* B, double* C)
 {
-    //Разность матриц
+    //Разность матриц, запись производится в матрицу C
     int right = M * N;
     for (int i = 0; i < right; i++)
     {
@@ -73,12 +75,10 @@ void diffMatrix(int M, int N, const double* A, const double* B, double* C)
     }
 }
 
-#include <iostream>
-#include <vector>
-
 using namespace std;
 int ReverseInt(int i)
 {
+    //Вспомогательный метод для чтения датасета
     unsigned char ch1, ch2, ch3, ch4;
     ch1 = i & 255;
     ch2 = (i >> 8) & 255;
@@ -87,8 +87,28 @@ int ReverseInt(int i)
     return((int)ch1 << 24) + ((int)ch2 << 16) + ((int)ch3 << 8) + ch4;
 }
 
-double** readMNIST(int NumberOfImages, int DataOfAnImage)
+double** readMNIST(DataSetType type)
 {
+    //Чтение датасета Train - тренировочный, Test - тестирования, необходимо наличие соответствующих файлов в рабочей директории
+    int DataOfAnImage = 28 * 28;
+    int NumberOfImages;
+    string fileName;
+
+    switch (type)
+    {
+    case Train:
+        NumberOfImages = 60000;
+        fileName = "train-images.idx3-ubyte";
+        break;
+    case Test:
+        NumberOfImages = 10000;
+        fileName = "t10k-images.idx3-ubyte";
+        break;
+    default:
+        NumberOfImages = 60000;
+        fileName = "train-images.idx3-ubyte";
+        break;
+    }
     double** data = new double*[NumberOfImages];
 
     for (int i = 0; i < NumberOfImages; i++)
@@ -96,7 +116,7 @@ double** readMNIST(int NumberOfImages, int DataOfAnImage)
         data[i] = new double[DataOfAnImage];
     }
 
-    ifstream file("t10k-images.idx3-ubyte", ios::binary);
+    ifstream file(fileName, ios::binary);
     if (file.is_open())
     {
         int magic_number = 0;
@@ -125,14 +145,37 @@ double** readMNIST(int NumberOfImages, int DataOfAnImage)
         }
         return data;
     }
-    return nullptr;
+    else
+    {
+        cout << "Ошибка, файл {" << fileName << "} не найден";
+        return nullptr;
+    }
 }
 
-int* readMNISTLabels(int NumberOfImages)
+int* readMNISTLabels(DataSetType type)
 {
+    //Чтение ответов к датасету Train - тренировочный, Test - тестирования, необходимо наличие соответствующих файлов в рабочей директории
+    int NumberOfImages;
+    string fileName;
+
+    switch (type)
+    {
+    case Train:
+        NumberOfImages = 60000;
+        fileName = "train-labels.idx1-ubyte";
+        break;
+    case Test:
+        NumberOfImages = 10000;
+        fileName = "t10k-labels.idx1-ubyte";
+        break;
+    default:
+        NumberOfImages = 60000;
+        fileName = "train-labels.idx1-ubyte";
+        break;
+    }
     int* data = new int [NumberOfImages];
 
-    ifstream file("t10k-labels.idx1-ubyte", ios::binary);
+    ifstream file(fileName, ios::binary);
     if (file.is_open())
     {
         int magic_number = 0;
@@ -150,11 +193,16 @@ int* readMNISTLabels(int NumberOfImages)
         }
         return data;
     }
-    return nullptr;
+    else
+    {
+        cout << "Ошибка, файл {" << fileName << "} не найден";
+        return nullptr;
+    }
 }
 
 int argMax(double* value, int size)
 {
+    //Возвращает индекс наибольшего элемента в массиве
     double max = value[0];
     int prediction = 0;
     double tmp;
@@ -171,7 +219,7 @@ int argMax(double* value, int size)
 
 double* transposeMatrix(int M, int N, double* Matrix)
 {
-    //Matrix MxN
+    //Транспонирование матрицы M на N, возвращает новую матрицу, старую не изменяет
     double* result = new double[M * N];
 
     for (int i = 0; i < N; i++)
@@ -186,6 +234,7 @@ double* transposeMatrix(int M, int N, double* Matrix)
 
 void statsArray(int n, double* array)
 {
+    //Выводит статистику по массиву: размер, минимум, максимум, среднее
     double min = array[0];
     double max = array[0];
     double avg = 0;
@@ -204,4 +253,28 @@ void statsArray(int n, double* array)
     }
     avg = avg / double(n);
     cout << "Массив [" << n << "], Min: " << min << " Max: " << max << " Avg: " << avg << endl;
+}
+
+double* readFile(string filename)
+{
+    ifstream file(filename);
+    if (file.is_open())
+    {
+        int count = 784;
+        double* data = new double[count];
+
+        for (int i = 0; i < count; i++)
+        {
+            file >> data[i];
+
+        }
+        cout << "Файл загружен" << endl;
+        file.close();
+        return data;
+    }
+    else
+    {
+        cout << "Файл не найден" << endl;
+    }
+    return nullptr;
 }
